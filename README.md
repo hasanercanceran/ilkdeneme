@@ -10,3 +10,5 @@ Burada şunları öğreniyorum:
 - **Pull Request**: Bir denemeyi ana hale eklemek için verdiğim teklif
 
 Adım adım ilerliyorum ve her şeyi anlıyorum. 💪
+
+Zaman zaman halledebiliriz.
