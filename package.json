@@ -1,0 +1,39 @@
+{
+  "name": "finans-takip-2027",
+  "productName": "Finans Takip 2027",
+  "version": "1.0.0",
+  "description": "2027 yılı çek/senet, borç, kira ve nakit akışı takip programı",
+  "main": "masaustu/main.js",
+  "author": "Hasan Ercan Ceran",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "derle:windows": "electron-builder --win portable zip",
+    "derle:mac": "electron-builder --mac zip",
+    "derle:linux": "electron-builder --linux AppImage"
+  },
+  "build": {
+    "appId": "com.hasanercanceran.finans2027",
+    "productName": "Finans Takip 2027",
+    "files": [
+      "index.html",
+      "style.css",
+      "app.js",
+      "masaustu/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "Finans-Takip-2027.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.5.0",
+    "electron-builder": "^26.18.0"
+  }
+}

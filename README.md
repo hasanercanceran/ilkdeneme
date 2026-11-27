@@ -38,3 +38,28 @@ dosyasını doğrudan tarayıcıda çift tıklayarak da açabilirsin.
 Veriler tarayıcının `localStorage`'ında saklanır (hiçbir sunucuya gönderilmez).
 Üstteki "Yedek Al" ile verileri JSON olarak indirip "Yedek Yükle" ile geri
 yükleyebilirsin — tarayıcı verisini silersen diye.
+
+
+## Masaüstü Programı (Windows / Mac / Linux)
+
+Uygulama Electron ile kendi penceresinde, tarayıcı olmadan çalışır. Veriler
+bilgisayarında şu dosyaya yazılır:
+
+`Belgelerim/Finans Takip 2027/finans2027-veri.json`
+
+Her gün ilk açılışta `otomatik-yedekler` klasörüne günlük bir kopya alınır.
+
+**Geliştirme için çalıştırma:** Node.js kurulu olmalı.
+
+```bash
+npm install
+npm start
+```
+
+**Kurulabilir dosya üretme:**
+
+```bash
+npm run derle:windows
+```
+
+Çıktı `dist/` klasörüne yazılır (`derle:mac` ve `derle:linux` de var).

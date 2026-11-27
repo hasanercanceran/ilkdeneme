@@ -1,9 +1,15 @@
 const STORAGE_KEY = 'finans2027';
+const disk = window.finansDisk || null;
+
+function bosVeri() {
+  return { checks: [], debts: [], others: [], rents: [] };
+}
 
 function loadData() {
+  let raw = null;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { checks: [], debts: [], others: [], rents: [] };
+    raw = disk ? disk.oku() : localStorage.getItem(STORAGE_KEY);
+    if (!raw) return bosVeri();
     const parsed = JSON.parse(raw);
     return {
       checks: parsed.checks || [],
@@ -13,12 +19,27 @@ function loadData() {
     };
   } catch (e) {
     console.error('Veri okunamadı', e);
-    return { checks: [], debts: [], others: [], rents: [] };
+    if (disk && raw) {
+      disk.bozukDosyayiAyir();
+      disk.uyari('Kayıt dosyası okunamadı. Bozuk dosya ayrı bir isimle saklandı; program boş başlatılıyor. Otomatik yedeklerden geri yükleyebilirsin.');
+    }
+    return bosVeri();
   }
 }
 
 function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const json = JSON.stringify(state);
+  if (disk) disk.yaz(json);
+  else localStorage.setItem(STORAGE_KEY, json);
+}
+
+function askConfirm(msg) {
+  return disk ? disk.onay(msg) : confirm(msg);
+}
+
+function showAlert(msg) {
+  if (disk) disk.uyari(msg);
+  else alert(msg);
 }
 
 let state = loadData();
@@ -138,7 +159,7 @@ document.querySelector('#checkTable tbody').addEventListener('click', (e) => {
   if (!btn) return;
   const item = state.checks.find((c) => c.id === btn.dataset.id);
   if (btn.dataset.action === 'delete') {
-    if (confirm('Bu çek/senet kaydını silmek istiyor musun?')) {
+    if (askConfirm('Bu çek/senet kaydını silmek istiyor musun?')) {
       state.checks = state.checks.filter((c) => c.id !== btn.dataset.id);
       saveData();
       renderChecks();
@@ -215,7 +236,7 @@ document.querySelector('#debtTable tbody').addEventListener('click', (e) => {
   if (!btn) return;
   const item = state.debts.find((c) => c.id === btn.dataset.id);
   if (btn.dataset.action === 'delete') {
-    if (confirm('Bu borç kaydını silmek istiyor musun?')) {
+    if (askConfirm('Bu borç kaydını silmek istiyor musun?')) {
       state.debts = state.debts.filter((c) => c.id !== btn.dataset.id);
       saveData();
       renderDebts();
@@ -292,7 +313,7 @@ document.querySelector('#otherTable tbody').addEventListener('click', (e) => {
   if (!btn) return;
   const item = state.others.find((c) => c.id === btn.dataset.id);
   if (btn.dataset.action === 'delete') {
-    if (confirm('Bu kaydı silmek istiyor musun?')) {
+    if (askConfirm('Bu kaydı silmek istiyor musun?')) {
       state.others = state.others.filter((c) => c.id !== btn.dataset.id);
       saveData();
       renderOthers();
@@ -371,7 +392,7 @@ document.querySelector('#rentTable tbody').addEventListener('click', (e) => {
   if (!btn) return;
   const item = state.rents.find((c) => c.id === btn.dataset.id);
   if (btn.dataset.action === 'delete') {
-    if (confirm('Bu kira kaydını silmek istiyor musun?')) {
+    if (askConfirm('Bu kira kaydını silmek istiyor musun?')) {
       state.rents = state.rents.filter((c) => c.id !== btn.dataset.id);
       saveData();
       renderRents();
@@ -548,7 +569,7 @@ document.getElementById('importInput').addEventListener('change', (e) => {
   reader.onload = () => {
     try {
       const parsed = JSON.parse(reader.result);
-      if (!confirm('Mevcut veriler yedek dosyasıyla değiştirilecek. Onaylıyor musun?')) return;
+      if (!askConfirm('Mevcut veriler yedek dosyasıyla değiştirilecek. Onaylıyor musun?')) return;
       state = {
         checks: parsed.checks || [],
         debts: parsed.debts || [],
@@ -556,9 +577,15 @@ document.getElementById('importInput').addEventListener('change', (e) => {
         rents: parsed.rents || [],
       };
       saveData();
-      renderAll();
+      if (disk) {
+  const yolEl = document.getElementById('dataPath');
+  yolEl.textContent = 'Veriler: ' + disk.yol();
+  yolEl.hidden = false;
+}
+
+renderAll();
     } catch (err) {
-      alert('Dosya okunamadı, geçerli bir yedek JSON dosyası seç.');
+      showAlert('Dosya okunamadı, geçerli bir yedek JSON dosyası seç.');
     }
   };
   reader.readAsText(file);
@@ -578,6 +605,12 @@ function renderAll() {
   renderRents();
   renderSummary();
   renderCashFlow();
+}
+
+if (disk) {
+  const yolEl = document.getElementById('dataPath');
+  yolEl.textContent = 'Veriler: ' + disk.yol();
+  yolEl.hidden = false;
 }
 
 renderAll();
