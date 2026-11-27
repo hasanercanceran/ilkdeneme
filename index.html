@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2027 Finans Takip</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>2027 Finans Takip</h1>
+  <div class="topbar-actions">
+    <button id="exportBtn" class="btn btn-ghost">Yedek Al (JSON)</button>
+    <label class="btn btn-ghost file-label">Yedek Yükle
+      <input type="file" id="importInput" accept="application/json" hidden>
+    </label>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="ozet">Özet</button>
+  <button class="tab-btn" data-tab="cekler">Çek / Senet</button>
+  <button class="tab-btn" data-tab="borclar">Borçlar</button>
+  <button class="tab-btn" data-tab="diger">Diğer Gelir / Gider</button>
+  <button class="tab-btn" data-tab="kira">Kira Sözleşmesi</button>
+  <button class="tab-btn" data-tab="akis">Nakit Akışı</button>
+</nav>
+
+<main>
+
+  <section id="tab-ozet" class="tab-panel active">
+    <div class="cards" id="summaryCards"></div>
+    <div class="panel-grid">
+      <div class="card">
+        <h2>Bu Ay Vadesi Gelenler</h2>
+        <div id="dueThisMonth" class="mini-list"></div>
+      </div>
+      <div class="card">
+        <h2>Geciken Kayıtlar</h2>
+        <div id="overdueList" class="mini-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-cekler" class="tab-panel">
+    <form id="checkForm" class="entry-form">
+      <input type="hidden" name="id">
+      <input type="text" name="kisi" placeholder="Kimden (firma/kişi)" required>
+      <input type="number" name="tutar" placeholder="Tutar (TL)" step="0.01" min="0" required>
+      <input type="date" name="vade" required>
+      <input type="number" name="taksit" placeholder="Taksit/Adet Sayısı" min="1" value="1" title="Birden fazla ise her biri 1 ay arayla, kendi tarihiyle ayrı ayrı eklenir.">
+      <select name="durum">
+        <option value="bekliyor">Bekliyor</option>
+        <option value="tahsil">Tahsil Edildi</option>
+        <option value="karsiliksiz">Karşılıksız</option>
+      </select>
+      <input type="text" name="not" placeholder="Not (opsiyonel)">
+      <button type="submit" class="btn btn-primary">Ekle</button>
+      <button type="button" class="btn btn-ghost" id="checkCancel" hidden>Vazgeç</button>
+    </form>
+    <table class="data-table" id="checkTable">
+      <thead><tr><th>Kimden</th><th>Tutar</th><th>Vade</th><th>Durum</th><th>Not</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="tab-borclar" class="tab-panel">
+    <form id="debtForm" class="entry-form">
+      <input type="hidden" name="id">
+      <input type="text" name="kisi" placeholder="Kime (firma/kişi)" required>
+      <input type="number" name="tutar" placeholder="Tutar (TL)" step="0.01" min="0" required>
+      <input type="date" name="vade" required>
+      <input type="number" name="taksit" placeholder="Taksit Sayısı" min="1" value="1" title="Birden fazla ise her biri 1 ay arayla, kendi tarihiyle ayrı ayrı eklenir.">
+      <select name="durum">
+        <option value="bekliyor">Bekliyor</option>
+        <option value="odendi">Ödendi</option>
+      </select>
+      <input type="text" name="not" placeholder="Not (opsiyonel)">
+      <button type="submit" class="btn btn-primary">Ekle</button>
+      <button type="button" class="btn btn-ghost" id="debtCancel" hidden>Vazgeç</button>
+    </form>
+    <table class="data-table" id="debtTable">
+      <thead><tr><th>Kime</th><th>Tutar</th><th>Vade</th><th>Durum</th><th>Not</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="tab-diger" class="tab-panel">
+    <form id="otherForm" class="entry-form">
+      <input type="hidden" name="id">
+      <select name="tur">
+        <option value="gelir">Gelir</option>
+        <option value="gider">Gider</option>
+      </select>
+      <input type="text" name="aciklama" placeholder="Açıklama" required>
+      <input type="number" name="tutar" placeholder="Tutar (TL)" step="0.01" min="0" required>
+      <input type="date" name="vade" required>
+      <input type="number" name="taksit" placeholder="Taksit Sayısı" min="1" value="1" title="Birden fazla ise her biri 1 ay arayla, kendi tarihiyle ayrı ayrı eklenir.">
+      <select name="durum">
+        <option value="bekliyor">Bekliyor</option>
+        <option value="gerceklesti">Gerçekleşti</option>
+      </select>
+      <button type="submit" class="btn btn-primary">Ekle</button>
+      <button type="button" class="btn btn-ghost" id="otherCancel" hidden>Vazgeç</button>
+    </form>
+    <table class="data-table" id="otherTable">
+      <thead><tr><th>Tür</th><th>Açıklama</th><th>Tutar</th><th>Tarih</th><th>Durum</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="tab-kira" class="tab-panel">
+    <form id="rentForm" class="entry-form">
+      <input type="hidden" name="id">
+      <input type="text" name="kisi" placeholder="Kiracı / Ev Sahibi" required>
+      <select name="tur">
+        <option value="gelir">Kira Geliri (tahsil edeceğim)</option>
+        <option value="gider">Kira Ödemesi (ödeyeceğim)</option>
+      </select>
+      <input type="number" name="tutar" placeholder="Aylık Kira Tutarı (TL)" step="0.01" min="0" required>
+      <input type="date" name="vade" required>
+      <input type="number" name="taksit" placeholder="Sözleşme Süresi (Ay)" min="1" value="1" title="Sözleşme kaç ay sürecekse buraya yaz, her ay kendi tarihiyle ayrı ödeme olarak eklenir.">
+      <select name="durum">
+        <option value="bekliyor">Bekliyor</option>
+        <option value="tamamlandi">Tamamlandı</option>
+      </select>
+      <input type="text" name="not" placeholder="Not (adres, sözleşme no vb.)">
+      <button type="submit" class="btn btn-primary">Ekle</button>
+      <button type="button" class="btn btn-ghost" id="rentCancel" hidden>Vazgeç</button>
+    </form>
+    <table class="data-table" id="rentTable">
+      <thead><tr><th>Kiracı/Ev Sahibi</th><th>Tür</th><th>Tutar</th><th>Tarih</th><th>Durum</th><th>Not</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="tab-akis" class="tab-panel">
+    <div id="cashFlowContainer"></div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
