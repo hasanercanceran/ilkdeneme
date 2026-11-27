@@ -12,3 +12,10 @@ Burada şunları öğreniyorum:
 Adım adım ilerliyorum ve her şeyi anlıyorum. 💪
 
 Zaman zaman halledebiliriz.
+
+## 2027 Nakit Defteri
+
+`nakit-defteri-2027.html` dosyasını tarayıcıda açarak kullanılan, kurulum gerektirmeyen bir program.
+2027 yılındaki ödemeleri, alacakları, çek ve senetleri (alınan/verilen), kira gelirlerini ve giderleri kaydeder;
+aylık nakit akışı, kümülatif bakiye, bekleyen ve gecikmiş kayıtları gösterir.
+Veriler tarayıcıda saklanır; "Yedekle" / "Geri yükle" ile JSON, "CSV indir" ile Excel'e aktarılabilir.

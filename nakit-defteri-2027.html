@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2027 Nakit Defteri</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --text: #1b2230; --muted: #667085; --line: #e3e6ec;
+    --accent: #2457d6; --accent-ink: #ffffff;
+    --in: #0f7b4a; --in-bg: #e4f5ec; --out: #c0392b; --out-bg: #fbe9e7;
+    --warn: #a15c00; --warn-bg: #fff2d9; --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --panel: #1a1f28; --text: #e8ebf1; --muted: #98a2b3; --line: #2a313d;
+      --accent: #6b93ff; --accent-ink: #0c1220;
+      --in: #4cc38a; --in-bg: #12301f; --out: #ff8a7a; --out-bg: #3a1c19;
+      --warn: #f3b44f; --warn-bg: #3a2c0f; --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  h1 { font-size: 22px; margin: 0; }
+  h1 small { color: var(--muted); font-weight: 400; font-size: 14px; margin-left: 6px; }
+  h2 { font-size: 16px; margin: 0 0 10px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button, select, input, textarea { font: inherit; color: inherit; }
+  button { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.danger { color: var(--out); }
+  button.small { padding: 3px 9px; font-size: 13px; }
+  input, select, textarea { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; width: 100%; }
+  input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tabs button { border-radius: 999px; }
+  .tabs button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); }
+  .card .k { color: var(--muted); font-size: 12.5px; }
+  .card .v { font-size: 20px; font-weight: 650; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .in { color: var(--in); } .out { color: var(--out); } .warn { color: var(--warn); }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { color: var(--muted); font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tfoot td { font-weight: 650; border-bottom: 0; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); white-space: nowrap; }
+  .badge.in { background: var(--in-bg); border-color: transparent; }
+  .badge.out { background: var(--out-bg); border-color: transparent; }
+  .badge.warn { background: var(--warn-bg); border-color: transparent; }
+  .sub { color: var(--muted); font-size: 12.5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chips button { border-radius: 999px; padding: 4px 12px; font-size: 13.5px; }
+  .chips button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .bar { height: 8px; border-radius: 4px; background: var(--line); position: relative; min-width: 90px; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; }
+  .bar i.a { background: var(--in); opacity: .85; }
+  .bar i.b { background: var(--out); opacity: .85; top: 4px; }
+  .empty { text-align: center; color: var(--muted); padding: 28px 8px; }
+  dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; width: min(560px, calc(100vw - 24px)); background: var(--panel); color: var(--text); }
+  dialog::backdrop { background: rgba(10, 14, 22, .55); }
+  .dlg { padding: 18px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid2 .full { grid-column: 1 / -1; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 3px; }
+  .check { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 14px; margin-top: 6px; }
+  .check input { width: auto; }
+  .notice { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; display: none; }
+  .hidden { display: none !important; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+  @media print {
+    body { background: #fff; color: #000; }
+    header .row, .tabs, .filters, .chips, .no-print, button { display: none !important; }
+    .panel, .card { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>2027 Nakit Defteri <small>ödemeler · alacaklar · çek · senet · kira · giderler</small></h1>
+    <div class="row">
+      <button class="primary" id="btnYeni">+ Yeni kayıt</button>
+      <button id="btnCsv" title="Excel'de açılabilir">CSV indir</button>
+      <button id="btnYedek" title="Tüm veriyi dosyaya yedekle">Yedekle</button>
+      <button id="btnGeriYukle">Geri yükle</button>
+      <button id="btnYazdir">Yazdır</button>
+      <input type="file" id="dosya" accept=".json,application/json" class="hidden">
+    </div>
+  </header>
+
+  <div class="notice" id="uyari"></div>
+
+  <nav class="tabs" role="tablist">
+    <button data-sekme="ozet" class="on">Özet</button>
+    <button data-sekme="kayit">Kayıtlar</button>
+  </nav>
+
+  <section id="sekme-ozet"></section>
+  <section id="sekme-kayit" class="hidden"></section>
+
+  <p class="sub no-print">Veriler yalnızca bu tarayıcıda (bu cihazda) saklanır. Düzenli olarak “Yedekle” ile dosyaya kaydetmeniz önerilir. Tutarlar TL cinsindendir.</p>
+</div>
+
+<dialog id="dlg">
+  <form class="dlg" id="form" autocomplete="off">
+    <h2 id="dlgBaslik">Yeni kayıt</h2>
+    <div class="grid2">
+      <div>
+        <label for="fTur">Tür</label>
+        <select id="fTur"></select>
+      </div>
+      <div id="yonKutu" class="hidden">
+        <label for="fYon">Yön</label>
+        <select id="fYon">
+          <option value="giris">Alınan (tahsil edeceğim)</option>
+          <option value="cikis">Verilen (ödeyeceğim)</option>
+        </select>
+      </div>
+      <div>
+        <label for="fTarih" id="lTarih">Tarih / vade</label>
+        <input type="date" id="fTarih" required min="2027-01-01" max="2027-12-31">
+      </div>
+      <div>
+        <label for="fTutar">Tutar (₺)</label>
+        <input type="number" id="fTutar" required min="0" step="0.01" inputmode="decimal">
+      </div>
+      <div class="full">
+        <label for="fTaraf" id="lTaraf">Kişi / firma</label>
+        <input type="text" id="fTaraf" maxlength="120" list="tarafListe">
+        <datalist id="tarafListe"></datalist>
+      </div>
+      <div id="belgeKutu" class="hidden">
+        <label for="fBelgeNo">Çek / senet no</label>
+        <input type="text" id="fBelgeNo" maxlength="60">
+      </div>
+      <div id="bankaKutu" class="hidden">
+        <label for="fBanka">Banka / şube</label>
+        <input type="text" id="fBanka" maxlength="80">
+      </div>
+      <div id="kategoriKutu" class="hidden">
+        <label for="fKategori">Gider kategorisi</label>
+        <input type="text" id="fKategori" maxlength="60" list="kategoriListe" placeholder="Fatura, vergi, maaş…">
+        <datalist id="kategoriListe">
+          <option>Fatura</option><option>Vergi</option><option>Maaş</option><option>Aidat</option>
+          <option>Sigorta</option><option>Bakım-onarım</option><option>Kredi taksiti</option><option>Diğer</option>
+        </datalist>
+      </div>
+      <div class="full">
+        <label for="fAciklama" id="lAciklama">Açıklama</label>
+        <textarea id="fAciklama" rows="2" maxlength="400"></textarea>
+      </div>
+      <div class="full">
+        <label class="check"><input type="checkbox" id="fTamam"> <span id="lTamam">Gerçekleşti</span></label>
+        <label class="check" id="tekrarKutu"><input type="checkbox" id="fTekrar"> Her ay tekrarla (seçilen tarihten yıl sonuna kadar, aynı gün)</label>
+      </div>
+    </div>
+    <div class="row" style="justify-content: space-between; margin-top: 16px;">
+      <div class="row">
+        <button type="button" class="danger" id="btnSil">Sil</button>
+        <button type="button" class="danger hidden" id="btnSeriSil">Tüm seriyi sil</button>
+      </div>
+      <div class="row">
+        <button type="button" id="btnVazgec">Vazgeç</button>
+        <button type="submit" class="primary">Kaydet</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+  const YIL = 2027;
+  const ANAHTAR = 'nakit-defteri-' + YIL;
+  const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  // yon: 'giris' (para girer) | 'cikis' (para çıkar) | null (kayıtta seçilir)
+  const TURLER = {
+    odeme:  { ad: 'Ödeme',       yon: 'cikis', taraf: 'Kime ödenecek',  aciklama: 'Açıklama' },
+    alacak: { ad: 'Alacak',      yon: 'giris', taraf: 'Kimden alınacak', aciklama: 'Açıklama' },
+    cek:    { ad: 'Çek',         yon: null,    taraf: 'Kişi / firma (keşideci / lehtar)', aciklama: 'Açıklama' },
+    senet:  { ad: 'Senet',       yon: null,    taraf: 'Kişi / firma (borçlu / alacaklı)', aciklama: 'Açıklama' },
+    kira:   { ad: 'Kira geliri', yon: 'giris', taraf: 'Kiracı',         aciklama: 'Mülk / daire bilgisi' },
+    gider:  { ad: 'Gider',       yon: 'cikis', taraf: 'Kime / nereye',  aciklama: 'Açıklama' }
+  };
+
+  let kayitlar = [];
+  const durum = { sekme: 'ozet', tur: 'hepsi', ay: '', durum: '', ara: '' };
+  let duzenlenen = null; // düzenlenen kaydın id'si
+
+  const $ = (s) => document.querySelector(s);
+  const para = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
+  const tl = (n) => para.format(n || 0);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const bugun = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const tarihTR = (iso) => iso.split('-').reverse().join('.');
+  const ayNo = (iso) => parseInt(iso.slice(5, 7), 10) - 1;
+
+  // ---------- Saklama ----------
+  function uyar(msg) { const u = $('#uyari'); u.textContent = msg; u.style.display = msg ? 'block' : 'none'; }
+  function yukle() {
+    try {
+      const ham = localStorage.getItem(ANAHTAR);
+      kayitlar = ham ? JSON.parse(ham) : [];
+      if (!Array.isArray(kayitlar)) kayitlar = [];
+    } catch (e) { kayitlar = []; uyar('Tarayıcı depolaması okunamadı. Veriler kalıcı olmayabilir; lütfen düzenli yedek alın.'); }
+  }
+  function kaydet() {
+    try { localStorage.setItem(ANAHTAR, JSON.stringify(kayitlar)); uyar(''); }
+    catch (e) { uyar('Veriler tarayıcıya kaydedilemedi (özel pencere olabilir). Lütfen “Yedekle” ile dosyaya kaydedin.'); }
+  }
+
+  // ---------- Yardımcılar ----------
+  const yonu = (k) => k.yon;
+  const gecikmis = (k) => k.durum === 'bekliyor' && k.tarih < bugun();
+  const tamamEtiketi = (k) => (k.yon === 'giris' ? 'Tahsil edildi' : 'Ödendi');
+  function normalize(k) {
+    return {
+      id: String(k.id || uid()), tur: TURLER[k.tur] ? k.tur : 'gider',
+      yon: k.yon === 'giris' ? 'giris' : 'cikis',
+      tarih: /^\d{4}-\d{2}-\d{2}$/.test(k.tarih) ? k.tarih : YIL + '-01-01',
+      tutar: Math.max(0, Number(k.tutar) || 0), taraf: String(k.taraf || ''), aciklama: String(k.aciklama || ''),
+      belgeNo: String(k.belgeNo || ''), banka: String(k.banka || ''), kategori: String(k.kategori || ''),
+      durum: k.durum === 'tamam' ? 'tamam' : 'bekliyor', seri: k.seri || null
+    };
+  }
+  function toplamlar(liste) {
+    const t = { giris: 0, cikis: 0, girisTamam: 0, cikisTamam: 0, girisBekleyen: 0, cikisBekleyen: 0, gecikenGiris: 0, gecikenCikis: 0 };
+    for (const k of liste) {
+      const g = k.yon === 'giris';
+      t[g ? 'giris' : 'cikis'] += k.tutar;
+      if (k.durum === 'tamam') t[g ? 'girisTamam' : 'cikisTamam'] += k.tutar;
+      else {
+        t[g ? 'girisBekleyen' : 'cikisBekleyen'] += k.tutar;
+        if (gecikmis(k)) t[g ? 'gecikenGiris' : 'gecikenCikis'] += k.tutar;
+      }
+    }
+    return t;
+  }
+  const netSinif = (n) => (n > 0 ? 'in' : n < 0 ? 'out' : '');
+
+  // ---------- Özet ----------
+  function ozetCiz() {
+    const t = toplamlar(kayitlar);
+    const aylik = AYLAR.map((ad, i) => toplamlar(kayitlar.filter((k) => ayNo(k.tarih) === i)));
+    const maks = Math.max(1, ...aylik.map((a) => Math.max(a.giris, a.cikis)));
+    let kum = 0;
+    const satirlar = aylik.map((a, i) => {
+      const net = a.giris - a.cikis; kum += net;
+      return `<tr>
+        <td>${AYLAR[i]}</td>
+        <td class="num in">${tl(a.giris)}</td>
+        <td class="num out">${tl(a.cikis)}</td>
+        <td class="num ${netSinif(net)}">${tl(net)}</td>
+        <td class="num ${netSinif(kum)}">${tl(kum)}</td>
+        <td><div class="bar"><i class="a" style="width:${(a.giris / maks) * 100}%;height:4px"></i><i class="b" style="width:${(a.cikis / maks) * 100}%;height:4px"></i></div></td>
+      </tr>`;
+    }).join('');
+
+    const turSatir = Object.keys(TURLER).map((tk) => {
+      const l = kayitlar.filter((k) => k.tur === tk);
+      const x = toplamlar(l);
+      return `<tr><td>${TURLER[tk].ad}</td><td class="num">${l.length}</td><td class="num in">${tl(x.giris)}</td><td class="num out">${tl(x.cikis)}</td></tr>`;
+    }).join('');
+
+    const bekleyen = kayitlar.filter((k) => k.durum === 'bekliyor').sort((a, b) => a.tarih.localeCompare(b.tarih)).slice(0, 10);
+    const bekSatir = bekleyen.length ? bekleyen.map((k) => `<tr>
+        <td>${tarihTR(k.tarih)}</td><td>${TURLER[k.tur].ad}</td>
+        <td>${esc(k.taraf) || '<span class="sub">—</span>'}</td>
+        <td class="num ${k.yon === 'giris' ? 'in' : 'out'}">${k.yon === 'giris' ? '+' : '−'}${tl(k.tutar)}</td>
+        <td>${gecikmis(k) ? '<span class="badge warn">Gecikmiş</span>' : ''}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="empty">Bekleyen kayıt yok.</td></tr>';
+
+    $('#sekme-ozet').innerHTML = `
+      <div class="cards">
+        <div class="card"><div class="k">Toplam giriş (alacak, kira, alınan çek/senet)</div><div class="v in">${tl(t.giris)}</div></div>
+        <div class="card"><div class="k">Toplam çıkış (ödeme, gider, verilen çek/senet)</div><div class="v out">${tl(t.cikis)}</div></div>
+        <div class="card"><div class="k">${YIL} net</div><div class="v ${netSinif(t.giris - t.cikis)}">${tl(t.giris - t.cikis)}</div></div>
+        <div class="card"><div class="k">Tahsil edilen / Ödenen</div><div class="v"><span class="in">${tl(t.girisTamam)}</span><br><span class="out">${tl(t.cikisTamam)}</span></div></div>
+        <div class="card"><div class="k">Bekleyen tahsilat / Bekleyen ödeme</div><div class="v"><span class="in">${tl(t.girisBekleyen)}</span><br><span class="out">${tl(t.cikisBekleyen)}</span></div></div>
+        <div class="card"><div class="k">Gecikmiş tahsilat / ödeme</div><div class="v"><span class="${t.gecikenGiris ? 'warn' : ''}">${tl(t.gecikenGiris)}</span><br><span class="${t.gecikenCikis ? 'warn' : ''}">${tl(t.gecikenCikis)}</span></div></div>
+      </div>
+      <div class="panel"><h2>Aylık nakit akışı</h2>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Ay</th><th class="num">Giriş</th><th class="num">Çıkış</th><th class="num">Net</th><th class="num">Kümülatif</th><th></th></tr></thead>
+          <tbody>${satirlar}</tbody>
+          <tfoot><tr><td>Toplam</td><td class="num in">${tl(t.giris)}</td><td class="num out">${tl(t.cikis)}</td><td class="num ${netSinif(t.giris - t.cikis)}">${tl(t.giris - t.cikis)}</td><td></td><td></td></tr></tfoot>
+        </table></div>
+      </div>
+      <div class="panel"><h2>Sıradaki bekleyen kayıtlar</h2>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Tarih</th><th>Tür</th><th>Kişi / firma</th><th class="num">Tutar</th><th></th></tr></thead>
+          <tbody>${bekSatir}</tbody>
+        </table></div>
+      </div>
+      <div class="panel"><h2>Türe göre dağılım</h2>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Tür</th><th class="num">Adet</th><th class="num">Giriş</th><th class="num">Çıkış</th></tr></thead>
+          <tbody>${turSatir}</tbody>
+        </table></div>
+      </div>`;
+  }
+
+  // ---------- Kayıtlar ----------
+  function filtreli() {
+    const q = durum.ara.trim().toLocaleLowerCase('tr');
+    return kayitlar.filter((k) =>
+      (durum.tur === 'hepsi' || k.tur === durum.tur) &&
+      (durum.ay === '' || ayNo(k.tarih) === Number(durum.ay)) &&
+      (durum.durum === '' || (durum.durum === 'gecikmis' ? gecikmis(k) : k.durum === durum.durum)) &&
+      (!q || [k.taraf, k.aciklama, k.belgeNo, k.banka, k.kategori].join(' ').toLocaleLowerCase('tr').includes(q))
+    ).sort((a, b) => a.tarih.localeCompare(b.tarih) || a.taraf.localeCompare(b.taraf, 'tr'));
+  }
+
+  function kayitCiz() {
+    const kok = $('#sekme-kayit');
+    // Filtre çubuğu yalnızca ilk çizimde kurulur (yazarken odak kaybolmasın)
+    if (!kok.dataset.hazir) {
+      kok.dataset.hazir = '1';
+      kok.innerHTML = `
+        <div class="chips" id="turChips"></div>
+        <div class="filters">
+          <select id="fltAy"><option value="">Tüm aylar</option>${AYLAR.map((a, i) => `<option value="${i}">${a}</option>`).join('')}</select>
+          <select id="fltDurum">
+            <option value="">Tüm durumlar</option><option value="bekliyor">Bekleyen</option>
+            <option value="tamam">Gerçekleşen</option><option value="gecikmis">Gecikmiş</option>
+          </select>
+          <input type="search" id="fltAra" placeholder="Ara: kişi, açıklama, no…">
+        </div>
+        <div class="panel"><div class="table-scroll" id="liste"></div></div>`;
+      $('#fltAy').addEventListener('change', (e) => { durum.ay = e.target.value; listeCiz(); });
+      $('#fltDurum').addEventListener('change', (e) => { durum.durum = e.target.value; listeCiz(); });
+      $('#fltAra').addEventListener('input', (e) => { durum.ara = e.target.value; listeCiz(); });
+      $('#turChips').addEventListener('click', (e) => {
+        const b = e.target.closest('button'); if (!b) return;
+        durum.tur = b.dataset.tur; chipCiz(); listeCiz();
+      });
+      $('#liste').addEventListener('click', listeTikla);
+    }
+    chipCiz(); listeCiz();
+  }
+  function chipCiz() {
+    const sayim = (tk) => kayitlar.filter((k) => tk === 'hepsi' || k.tur === tk).length;
+    $('#turChips').innerHTML = [['hepsi', 'Tümü'], ...Object.entries(TURLER).map(([k, v]) => [k, v.ad])]
+      .map(([k, ad]) => `<button data-tur="${k}" class="${durum.tur === k ? 'on' : ''}">${ad} (${sayim(k)})</button>`).join('');
+  }
+  function listeCiz() {
+    const l = filtreli();
+    const t = toplamlar(l);
+    if (!l.length) { $('#liste').innerHTML = '<div class="empty">Bu görünümde kayıt yok. “+ Yeni kayıt” ile ekleyebilirsiniz.</div>'; return; }
+    const satir = l.map((k) => {
+      const detay = [k.aciklama, k.belgeNo && ('No: ' + k.belgeNo), k.banka, k.kategori].filter(Boolean).map(esc).join(' · ');
+      const durumBtn = k.durum === 'tamam'
+        ? `<button class="small" data-act="geri" data-id="${k.id}" title="Geri al"><span class="badge ${k.yon === 'giris' ? 'in' : 'out'}">${tamamEtiketi(k)}</span></button>`
+        : `<button class="small" data-act="tamam" data-id="${k.id}">${gecikmis(k) ? '⚠ ' : ''}${k.yon === 'giris' ? 'Tahsil et' : 'Öde'}</button>`;
+      return `<tr>
+        <td>${tarihTR(k.tarih)}</td>
+        <td>${TURLER[k.tur].ad}${(k.tur === 'cek' || k.tur === 'senet') ? `<div class="sub">${k.yon === 'giris' ? 'alınan' : 'verilen'}</div>` : ''}</td>
+        <td>${esc(k.taraf) || '<span class="sub">—</span>'}${detay ? `<div class="sub">${detay}</div>` : ''}</td>
+        <td class="num ${k.yon === 'giris' ? 'in' : 'out'}">${k.yon === 'giris' ? '+' : '−'}${tl(k.tutar)}</td>
+        <td>${durumBtn}</td>
+        <td class="num"><button class="small" data-act="duzenle" data-id="${k.id}">Düzenle</button></td></tr>`;
+    }).join('');
+    $('#liste').innerHTML = `<table>
+      <thead><tr><th>Tarih</th><th>Tür</th><th>Kişi / firma</th><th class="num">Tutar</th><th>Durum</th><th></th></tr></thead>
+      <tbody>${satir}</tbody>
+      <tfoot><tr><td colspan="3">${l.length} kayıt — giriş <span class="in">${tl(t.giris)}</span> · çıkış <span class="out">${tl(t.cikis)}</span></td>
+      <td class="num ${netSinif(t.giris - t.cikis)}">${tl(t.giris - t.cikis)}</td><td colspan="2" class="sub">net</td></tr></tfoot></table>`;
+  }
+  function listeTikla(e) {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const k = kayitlar.find((x) => x.id === b.dataset.id); if (!k) return;
+    if (b.dataset.act === 'duzenle') return formAc(k);
+    k.durum = b.dataset.act === 'tamam' ? 'tamam' : 'bekliyor';
+    kaydet(); hepsiniCiz();
+  }
+
+  function hepsiniCiz() {
+    ozetCiz();
+    if ($('#sekme-kayit').dataset.hazir) { chipCiz(); listeCiz(); }
+    tarafListesi();
+  }
+  function sekmeSec(s) {
+    durum.sekme = s;
+    document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.sekme === s));
+    $('#sekme-ozet').classList.toggle('hidden', s !== 'ozet');
+    $('#sekme-kayit').classList.toggle('hidden', s !== 'kayit');
+    if (s === 'kayit') kayitCiz(); else ozetCiz();
+  }
+
+  // ---------- Form ----------
+  function tarafListesi() {
+    const isimler = [...new Set(kayitlar.map((k) => k.taraf).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr'));
+    $('#tarafListe').innerHTML = isimler.map((i) => `<option value="${esc(i)}">`).join('');
+  }
+  function turDegisti() {
+    const tk = $('#fTur').value; const t = TURLER[tk];
+    $('#yonKutu').classList.toggle('hidden', t.yon !== null);
+    $('#belgeKutu').classList.toggle('hidden', !(tk === 'cek' || tk === 'senet'));
+    $('#bankaKutu').classList.toggle('hidden', tk !== 'cek');
+    $('#kategoriKutu').classList.toggle('hidden', tk !== 'gider');
+    $('#lTaraf').textContent = t.taraf;
+    $('#lAciklama').textContent = t.aciklama;
+    $('#lTarih').textContent = (tk === 'cek' || tk === 'senet') ? 'Vade tarihi' : (tk === 'kira' ? 'Kira ödeme tarihi' : 'Tarih / vade');
+    yonDegisti();
+  }
+  function etkinYon() { const t = TURLER[$('#fTur').value]; return t.yon || $('#fYon').value; }
+  function yonDegisti() { $('#lTamam').textContent = etkinYon() === 'giris' ? 'Tahsil edildi' : 'Ödendi'; }
+
+  function formAc(k, varsayilanTur) {
+    duzenlenen = k ? k.id : null;
+    $('#dlgBaslik').textContent = k ? 'Kaydı düzenle' : 'Yeni kayıt';
+    $('#fTur').innerHTML = Object.entries(TURLER).map(([key, v]) => `<option value="${key}">${v.ad}</option>`).join('');
+    $('#fTur').value = k ? k.tur : (varsayilanTur || (durum.tur !== 'hepsi' ? durum.tur : 'odeme'));
+    $('#fYon').value = k ? k.yon : 'giris';
+    $('#fTarih').value = k ? k.tarih : YIL + '-01-01';
+    $('#fTutar').value = k ? k.tutar : '';
+    $('#fTaraf').value = k ? k.taraf : '';
+    $('#fAciklama').value = k ? k.aciklama : '';
+    $('#fBelgeNo').value = k ? k.belgeNo : '';
+    $('#fBanka').value = k ? k.banka : '';
+    $('#fKategori').value = k ? k.kategori : '';
+    $('#fTamam').checked = !!(k && k.durum === 'tamam');
+    $('#fTekrar').checked = false;
+    $('#tekrarKutu').classList.toggle('hidden', !!k);
+    $('#btnSil').classList.toggle('hidden', !k);
+    $('#btnSeriSil').classList.toggle('hidden', !(k && k.seri && kayitlar.filter((x) => x.seri === k.seri).length > 1));
+    turDegisti();
+    $('#dlg').showModal();
+    $('#fTarih').focus();
+  }
+
+  function ayinSonGunu(yil, ay) { return new Date(yil, ay + 1, 0).getDate(); }
+  function tarihYap(ay, gun) { return YIL + '-' + String(ay + 1).padStart(2, '0') + '-' + String(Math.min(gun, ayinSonGunu(YIL, ay))).padStart(2, '0'); }
+
+  $('#form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const tarih = $('#fTarih').value;
+    if (!tarih || !tarih.startsWith(YIL + '-')) { alert('Tarih ' + YIL + ' yılı içinde olmalıdır.'); return; }
+    const tutar = parseFloat($('#fTutar').value);
+    if (!(tutar >= 0)) { alert('Geçerli bir tutar girin.'); return; }
+    const tk = $('#fTur').value;
+    const ortak = {
+      tur: tk, yon: etkinYon(), tutar: Math.round(tutar * 100) / 100,
+      taraf: $('#fTaraf').value.trim(), aciklama: $('#fAciklama').value.trim(),
+      belgeNo: (tk === 'cek' || tk === 'senet') ? $('#fBelgeNo').value.trim() : '',
+      banka: tk === 'cek' ? $('#fBanka').value.trim() : '',
+      kategori: tk === 'gider' ? $('#fKategori').value.trim() : '',
+      durum: $('#fTamam').checked ? 'tamam' : 'bekliyor'
+    };
+    if (duzenlenen) {
+      const k = kayitlar.find((x) => x.id === duzenlenen);
+      Object.assign(k, ortak, { tarih });
+    } else if ($('#fTekrar').checked) {
+      const seri = uid(); const ay0 = ayNo(tarih); const gun = parseInt(tarih.slice(8, 10), 10);
+      for (let a = ay0; a < 12; a++) kayitlar.push(normalize({ ...ortak, id: uid(), seri, tarih: tarihYap(a, gun), durum: a === ay0 ? ortak.durum : 'bekliyor' }));
+    } else {
+      kayitlar.push(normalize({ ...ortak, id: uid(), tarih }));
+    }
+    kaydet(); $('#dlg').close(); hepsiniCiz();
+  });
+  $('#btnVazgec').addEventListener('click', () => $('#dlg').close());
+  $('#btnSil').addEventListener('click', () => {
+    if (!confirm('Bu kayıt silinsin mi?')) return;
+    kayitlar = kayitlar.filter((x) => x.id !== duzenlenen);
+    kaydet(); $('#dlg').close(); hepsiniCiz();
+  });
+  $('#btnSeriSil').addEventListener('click', () => {
+    const k = kayitlar.find((x) => x.id === duzenlenen); if (!k) return;
+    const n = kayitlar.filter((x) => x.seri === k.seri).length;
+    if (!confirm('Bu serideki ' + n + ' kaydın tamamı silinsin mi?')) return;
+    kayitlar = kayitlar.filter((x) => x.seri !== k.seri);
+    kaydet(); $('#dlg').close(); hepsiniCiz();
+  });
+  $('#fTur').addEventListener('change', turDegisti);
+  $('#fYon').addEventListener('change', yonDegisti);
+  $('#btnYeni').addEventListener('click', () => formAc(null));
+
+  // ---------- Dışa / içe aktarma ----------
+  function indir(ad, icerik, tip) {
+    const url = URL.createObjectURL(new Blob([icerik], { type: tip }));
+    const a = document.createElement('a'); a.href = url; a.download = ad; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
+  }
+  $('#btnYedek').addEventListener('click', () => indir('nakit-defteri-' + YIL + '-yedek-' + bugun() + '.json', JSON.stringify({ yil: YIL, kayitlar }, null, 1), 'application/json'));
+  $('#btnCsv').addEventListener('click', () => {
+    const hucre = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const basl = ['Tarih', 'Tür', 'Yön', 'Kişi/Firma', 'Açıklama', 'Çek/Senet No', 'Banka', 'Kategori', 'Tutar', 'Durum'];
+    const satirlar = kayitlar.slice().sort((a, b) => a.tarih.localeCompare(b.tarih)).map((k) => [
+      tarihTR(k.tarih), TURLER[k.tur].ad, k.yon === 'giris' ? 'Giriş' : 'Çıkış', k.taraf, k.aciklama, k.belgeNo, k.banka, k.kategori,
+      String(k.tutar).replace('.', ','), k.durum === 'tamam' ? tamamEtiketi(k) : 'Bekliyor'
+    ].map(hucre).join(';'));
+    indir('nakit-defteri-' + YIL + '.csv', '﻿' + [basl.map(hucre).join(';'), ...satirlar].join('\r\n'), 'text/csv;charset=utf-8');
+  });
+  $('#btnGeriYukle').addEventListener('click', () => $('#dosya').click());
+  $('#dosya').addEventListener('change', (e) => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const veri = JSON.parse(r.result);
+        const liste = Array.isArray(veri) ? veri : veri.kayitlar;
+        if (!Array.isArray(liste)) throw new Error();
+        if (!confirm('Mevcut ' + kayitlar.length + ' kayıt silinip yedekteki ' + liste.length + ' kayıt yüklenecek. Devam edilsin mi?')) return;
+        kayitlar = liste.map(normalize); kaydet(); hepsiniCiz();
+      } catch (err) { alert('Bu dosya geçerli bir yedek dosyası değil.'); }
+    };
+    r.readAsText(f);
+  });
+  $('#btnYazdir').addEventListener('click', () => window.print());
+  document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => sekmeSec(b.dataset.sekme)));
+
+  yukle(); tarafListesi(); sekmeSec('ozet');
+})();
+</script>
+</body>
+</html>
