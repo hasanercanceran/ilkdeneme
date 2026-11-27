@@ -8,6 +8,33 @@ const YEDEK_KLASORU = path.join(VERI_KLASORU, 'otomatik-yedekler');
 
 let pencere;
 
+const KAYIT_DOSYASI = path.join(VERI_KLASORU, 'baslangic-kaydi.log');
+
+function kayit(mesaj) {
+  try {
+    fs.mkdirSync(VERI_KLASORU, { recursive: true });
+    fs.appendFileSync(KAYIT_DOSYASI, `${new Date().toISOString()} ${mesaj}\n`);
+  } catch (err) {}
+}
+
+process.on('uncaughtException', (err) => {
+  kayit('HATA: ' + (err && err.stack ? err.stack : err));
+  dialog.showErrorBox('Program hatası', String(err && err.message ? err.message : err));
+});
+
+app.disableHardwareAcceleration();
+
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (pencere) {
+      if (pencere.isMinimized()) pencere.restore();
+      pencere.focus();
+    }
+  });
+}
+
 function yedekAl() {
   if (!fs.existsSync(VERI_DOSYASI)) return;
   fs.mkdirSync(YEDEK_KLASORU, { recursive: true });
@@ -80,10 +107,13 @@ function pencereOlustur() {
       nodeIntegration: false,
     },
   });
-  pencere.loadFile(path.join(__dirname, '..', 'index.html'));
+  pencere.webContents.on('did-fail-load', (e, kod, aciklama) => kayit(`Sayfa yüklenemedi: ${kod} ${aciklama}`));
+  pencere.webContents.on('render-process-gone', (e, ayrinti) => kayit('Arayüz çöktü: ' + JSON.stringify(ayrinti)));
+  pencere.loadFile(path.join(__dirname, '..', 'index.html')).then(() => kayit('Pencere açıldı'));
 }
 
 app.whenReady().then(() => {
+  kayit('Program başlatılıyor, sürüm ' + app.getVersion());
   Menu.setApplicationMenu(null);
   yedekAl();
   pencereOlustur();

@@ -30,7 +30,13 @@
     },
     "portable": {
       "artifactName": "Finans-Takip-2027.exe"
-    }
+    },
+    "extraFiles": [
+      {
+        "from": "masaustu/Hata-Kaydi-Ile-Baslat.bat",
+        "to": "."
+      }
+    ]
   },
   "devDependencies": {
     "electron": "^45.5.0",
