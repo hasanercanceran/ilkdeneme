@@ -1,20 +1,36 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
-const VERI_KLASORU = path.join(app.getPath('documents'), 'Finans Takip 2027');
-const VERI_DOSYASI = path.join(VERI_KLASORU, 'finans2027-veri.json');
-const YEDEK_KLASORU = path.join(VERI_KLASORU, 'otomatik-yedekler');
+const BELGELER = app.getPath('documents');
+const KLASOR = path.join(BELGELER, 'Finans Takip');
+const DOSYA = path.join(KLASOR, 'finans-takip-veri.json');
+const YEDEK_KLASORU = path.join(KLASOR, 'otomatik-yedekler');
+const ESKI_DOSYA = path.join(BELGELER, 'Finans Takip 2027', 'finans2027-veri.json');
+const KAYIT_DOSYASI = path.join(KLASOR, 'baslangic-kaydi.log');
 
 let pencere;
 
-const KAYIT_DOSYASI = path.join(VERI_KLASORU, 'baslangic-kaydi.log');
-
 function kayit(mesaj) {
   try {
-    fs.mkdirSync(VERI_KLASORU, { recursive: true });
+    fs.mkdirSync(KLASOR, { recursive: true });
     fs.appendFileSync(KAYIT_DOSYASI, `${new Date().toISOString()} ${mesaj}\n`);
   } catch (err) {}
+}
+
+function yerelGun() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function gunlukYedek() {
+  if (!fs.existsSync(DOSYA)) return;
+  fs.mkdirSync(YEDEK_KLASORU, { recursive: true });
+  const hedef = path.join(YEDEK_KLASORU, `veri-${yerelGun()}.json`);
+  if (fs.existsSync(hedef)) return;
+  fs.copyFileSync(DOSYA, hedef);
+  const eskiler = fs.readdirSync(YEDEK_KLASORU).filter((d) => d.startsWith('veri-')).sort();
+  while (eskiler.length > 60) fs.unlinkSync(path.join(YEDEK_KLASORU, eskiler.shift()));
 }
 
 process.on('uncaughtException', (err) => {
@@ -35,87 +51,110 @@ if (!app.requestSingleInstanceLock()) {
   });
 }
 
-function yedekAl() {
-  if (!fs.existsSync(VERI_DOSYASI)) return;
-  fs.mkdirSync(YEDEK_KLASORU, { recursive: true });
-  const gun = new Date().toISOString().slice(0, 10);
-  const hedef = path.join(YEDEK_KLASORU, `finans2027-${gun}.json`);
-  if (!fs.existsSync(hedef)) fs.copyFileSync(VERI_DOSYASI, hedef);
-}
-
 ipcMain.on('veri:oku', (e) => {
+  let yeni = null;
+  let eski = null;
   try {
-    e.returnValue = fs.existsSync(VERI_DOSYASI) ? fs.readFileSync(VERI_DOSYASI, 'utf-8') : null;
+    if (fs.existsSync(DOSYA)) yeni = fs.readFileSync(DOSYA, 'utf-8');
+    else if (fs.existsSync(ESKI_DOSYA)) eski = fs.readFileSync(ESKI_DOSYA, 'utf-8');
   } catch (err) {
-    e.returnValue = null;
+    kayit('Okuma hatası: ' + err.message);
   }
+  e.returnValue = { yeni, eski, yol: DOSYA };
 });
 
-ipcMain.on('veri:yaz', (e, icerik) => {
+ipcMain.handle('veri:yaz', (e, icerik) => {
   try {
-    fs.mkdirSync(VERI_KLASORU, { recursive: true });
-    const gecici = VERI_DOSYASI + '.tmp';
+    fs.mkdirSync(KLASOR, { recursive: true });
+    gunlukYedek();
+    const gecici = DOSYA + '.tmp';
     fs.writeFileSync(gecici, icerik, 'utf-8');
-    fs.renameSync(gecici, VERI_DOSYASI);
-    e.returnValue = true;
+    fs.renameSync(gecici, DOSYA);
+    return { tamam: true };
   } catch (err) {
-    dialog.showErrorBox('Kayıt hatası', 'Veriler diske yazılamadı:\n' + err.message);
-    e.returnValue = false;
+    kayit('Yazma hatası: ' + err.message);
+    return { tamam: false, hata: err.message };
   }
 });
 
 ipcMain.on('veri:bozuk', (e) => {
   try {
-    const hedef = VERI_DOSYASI.replace('.json', `.bozuk-${Date.now()}.json`);
-    fs.renameSync(VERI_DOSYASI, hedef);
+    fs.renameSync(DOSYA, DOSYA.replace('.json', `.bozuk-${Date.now()}.json`));
   } catch (err) {}
   e.returnValue = true;
 });
 
-ipcMain.on('veri:yol', (e) => {
-  e.returnValue = VERI_DOSYASI;
-});
-
-ipcMain.on('dialog:onay', (e, mesaj) => {
-  const secim = dialog.showMessageBoxSync(pencere, {
-    type: 'question',
-    buttons: ['Evet', 'Hayır'],
-    defaultId: 1,
-    cancelId: 1,
-    title: 'Onay',
-    message: mesaj,
+ipcMain.handle('dosya:kaydet', async (e, { ad, icerik, filtreAd, uzanti, bom }) => {
+  const r = await dialog.showSaveDialog(pencere, {
+    defaultPath: path.join(BELGELER, ad),
+    filters: [{ name: filtreAd || 'Dosya', extensions: [uzanti] }],
   });
-  e.returnValue = secim === 0;
+  if (r.canceled || !r.filePath) return null;
+  fs.writeFileSync(r.filePath, (bom ? '﻿' : '') + icerik, 'utf-8');
+  return r.filePath;
 });
 
-ipcMain.on('dialog:uyari', (e, mesaj) => {
-  dialog.showMessageBoxSync(pencere, { type: 'warning', buttons: ['Tamam'], title: 'Uyarı', message: mesaj });
-  e.returnValue = true;
+ipcMain.handle('dosya:ac', async () => {
+  const r = await dialog.showOpenDialog(pencere, { properties: ['openFile'], filters: [{ name: 'Yedek (JSON)', extensions: ['json'] }] });
+  if (r.canceled || !r.filePaths[0]) return null;
+  return fs.readFileSync(r.filePaths[0], 'utf-8');
 });
+
+ipcMain.handle('rapor:pdf', async (e, ad) => {
+  const veri = await pencere.webContents.printToPDF({ printBackground: true, landscape: true, pageSize: 'A4' });
+  const r = await dialog.showSaveDialog(pencere, { defaultPath: path.join(BELGELER, ad || 'rapor.pdf'), filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+  if (r.canceled || !r.filePath) return null;
+  fs.writeFileSync(r.filePath, veri);
+  return r.filePath;
+});
+
+ipcMain.handle('klasor:ac', async () => {
+  fs.mkdirSync(KLASOR, { recursive: true });
+  return shell.openPath(KLASOR);
+});
+
+function menuKur() {
+  const sablon = [
+    { label: 'Dosya', submenu: [{ label: 'Yazdır…', accelerator: 'CmdOrCtrl+P', click: () => pencere.webContents.print() }, { type: 'separator' }, { label: 'Çıkış', role: 'quit' }] },
+    { label: 'Düzen', submenu: [{ role: 'undo', label: 'Geri Al' }, { role: 'redo', label: 'Yinele' }, { type: 'separator' }, { role: 'cut', label: 'Kes' }, { role: 'copy', label: 'Kopyala' }, { role: 'paste', label: 'Yapıştır' }, { role: 'selectAll', label: 'Tümünü Seç' }] },
+    { label: 'Görünüm', submenu: [{ role: 'zoomIn', label: 'Yakınlaştır' }, { role: 'zoomOut', label: 'Uzaklaştır' }, { role: 'resetZoom', label: 'Normal Boyut' }, { type: 'separator' }, { role: 'togglefullscreen', label: 'Tam Ekran' }, { role: 'toggleDevTools', label: 'Geliştirici Araçları' }] },
+    {
+      label: 'Yardım',
+      submenu: [
+        { label: 'Veri Klasörünü Aç', click: () => shell.openPath(KLASOR) },
+        { label: 'Hakkında', click: () => dialog.showMessageBox(pencere, { type: 'info', title: 'Hakkında', message: 'Finans Takip', detail: `Sürüm ${app.getVersion()}\nÇek/senet, borç, kira ve nakit akışı takip programı.\n\nVeri dosyası:\n${DOSYA}`, buttons: ['Tamam'] }) },
+      ],
+    },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(sablon));
+}
 
 function pencereOlustur() {
   pencere = new BrowserWindow({
-    width: 1180,
-    height: 820,
-    minWidth: 760,
-    minHeight: 560,
-    title: 'Finans Takip 2027',
-    backgroundColor: '#ffffff',
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
+    width: 1440,
+    height: 900,
+    minWidth: 1040,
+    minHeight: 640,
+    title: 'Finans Takip',
+    backgroundColor: '#0b1f4a',
+    icon: path.join(__dirname, '..', 'build', 'icon.png'),
+    show: false,
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: false },
   });
+  pencere.once('ready-to-show', () => pencere.show());
+  setTimeout(() => pencere && !pencere.isVisible() && pencere.show(), 4000);
   pencere.webContents.on('did-fail-load', (e, kod, aciklama) => kayit(`Sayfa yüklenemedi: ${kod} ${aciklama}`));
   pencere.webContents.on('render-process-gone', (e, ayrinti) => kayit('Arayüz çöktü: ' + JSON.stringify(ayrinti)));
-  pencere.loadFile(path.join(__dirname, '..', 'index.html')).then(() => kayit('Pencere açıldı'));
+  pencere.webContents.on('console-message', (e, seviye, mesaj, satir, kaynak) => {
+    if (seviye >= 2) kayit(`Arayüz hatası: ${mesaj} (${kaynak}:${satir})`);
+  });
+  pencere.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  pencere.loadFile(path.join(__dirname, '..', 'src', 'index.html')).then(() => kayit('Pencere açıldı'));
 }
 
 app.whenReady().then(() => {
   kayit('Program başlatılıyor, sürüm ' + app.getVersion());
-  Menu.setApplicationMenu(null);
-  yedekAl();
+  menuKur();
   pencereOlustur();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) pencereOlustur();

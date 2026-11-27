@@ -1,0 +1,14 @@
+FINANS TAKIP - KURULUM
+
+1) Bu zip dosyasina sag tiklayin ve "Tumunu ayikla" secin.
+2) Cikan klasorun icindeki "Kur.bat" dosyasina cift tiklayin.
+   - Windows "bilgisayariniz korundu" uyarisi cikarsa "Ek bilgi" > "Yine de calistir" deyin.
+3) Kurulum bitince masaustunde "Finans Takip" simgesi olusur.
+
+Verileriniz:  Belgelerim\Finans Takip\finans-takip-veri.json
+Otomatik yedekler:  Belgelerim\Finans Takip\otomatik-yedekler
+
+Program acilmazsa: "Hata-Kaydi-Ile-Baslat.bat" dosyasini calistirin ve
+Belgelerim\Finans Takip\baslangic-kaydi.log dosyasinin icerigini gonderin.
+
+Kaldirmak icin: Kaldir.bat (verileriniz silinmez).

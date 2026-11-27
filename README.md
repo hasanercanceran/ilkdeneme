@@ -13,53 +13,52 @@ Adım adım ilerliyorum ve her şeyi anlıyorum. 💪
 
 Zaman zaman halledebiliriz.
 
-## 2027 Finans Takip Uygulaması
+## Finans Takip (masaüstü programı)
 
-Çek/senet tahsilatlarını, borçları ve genel gelir/gider kayıtlarını takip edip
-2027 için aylık nakit akışını görmeye yarayan, tek sayfalık basit bir web uygulaması.
+Çek/senet, borç, kira sözleşmesi, gelir/gider ve cari hesapları tek yerde tutan,
+nakit akışını (gelecek/gidecek para) tarih sırasıyla ve yürüyen bakiyeyle gösteren
+Windows masaüstü programı. Tarayıcı gerekmez; veriler bilgisayarda bir dosyada saklanır.
 
-**Çalıştırma:**
+**Modüller**
 
-```bash
-python3 -m http.server 8000
-```
+- **Gösterge Paneli**: toplam alacak/borç, net pozisyon, geciken kalemler, önümüzdeki 30 gün, aylık özet
+- **Nakit Akışı**: tüm hareketler tek ekranda, filtre/arama, aylık özet tablosu, tek tıkla tahsil/ödeme
+- **Çek / Senet**: alınan ve verilen evraklar; portföyde, tahsile verildi, tahsil edildi, ciro, karşılıksız durumları
+- **Borçlar**: borç kartı, her taksit için ayrı vade tarihi, kısmi ödeme
+- **Kira Sözleşmeleri**: başlangıç, süre, ödeme günü, yıllık artış; aylık plan otomatik üretilir
+- **Gelir / Gider**: tekrarlayan kayıtlar için seri oluşturma
+- **Cari Hesaplar**: bakiye ve hesap ekstresi
+- **Raporlar**: vade listesi, çek/senet portföyü, cari bakiye, aylık nakit; yazdır / PDF / Excel (CSV)
 
-Sonra tarayıcıda `http://localhost:8000` adresini aç. Ya da `index.html`
-dosyasını doğrudan tarayıcıda çift tıklayarak da açabilirsin.
+**Veri**
 
-**Özellikler:**
+`Belgelerim/Finans Takip/finans-takip-veri.json` dosyasında tutulur. Her gün ilk
+değişiklikte `otomatik-yedekler` klasörüne kopya alınır (son 60 gün saklanır).
+Yedek Al / Yedekten Geri Yükle Ayarlar sayfasındadır.
 
-- **Özet**: toplam gelecek/gidecek para, net durum, bu ay vadesi gelenler, geciken kayıtlar
-- **Çek/Senet**: tahsil edilecek çek/senetlerin listesi (bekliyor / tahsil edildi / karşılıksız)
-- **Borçlar**: ödenecek borçların listesi (bekliyor / ödendi)
-- **Diğer Gelir/Gider**: çek/senet ve borç dışındaki gelir-gider kayıtları
-- **Nakit Akışı**: tüm hareketlerin aylara göre gruplanmış hâli, aylık ve kümülatif bakiye
+**Kurulum (Windows)**
 
-Veriler tarayıcının `localStorage`'ında saklanır (hiçbir sunucuya gönderilmez).
-Üstteki "Yedek Al" ile verileri JSON olarak indirip "Yedek Yükle" ile geri
-yükleyebilirsin — tarayıcı verisini silersen diye.
+Derlenmiş zip dosyasını ayıklayıp `Kur.bat` dosyasını çalıştırmak yeterlidir.
 
+**Geliştirme**
 
-## Masaüstü Programı (Windows / Mac / Linux)
-
-Uygulama Electron ile kendi penceresinde, tarayıcı olmadan çalışır. Veriler
-bilgisayarında şu dosyaya yazılır:
-
-`Belgelerim/Finans Takip 2027/finans2027-veri.json`
-
-Her gün ilk açılışta `otomatik-yedekler` klasörüne günlük bir kopya alınır.
-
-**Geliştirme için çalıştırma:** Node.js kurulu olmalı.
+Node.js gerekir.
 
 ```bash
 npm install
 npm start
 ```
 
-**Kurulabilir dosya üretme:**
+**Windows paketi üretme**
 
 ```bash
 npm run derle:windows
 ```
 
-Çıktı `dist/` klasörüne yazılır (`derle:mac` ve `derle:linux` de var).
+Çıktı `dist/` klasörüne yazılır. `derle:mac` ve `derle:linux` komutları da vardır.
+
+**Proje yapısı**
+
+- `masaustu/`: Electron ana süreç (pencere, dosya diyalogları, PDF, yedekleme)
+- `src/`: arayüz (HTML, CSS, JavaScript modülleri)
+- `build/`: simge ve derleme adımı

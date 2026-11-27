@@ -1,45 +1,73 @@
 {
-  "name": "finans-takip-2027",
-  "productName": "Finans Takip 2027",
-  "version": "1.0.0",
-  "description": "2027 yılı çek/senet, borç, kira ve nakit akışı takip programı",
+  "name": "finans-takip",
+  "productName": "Finans Takip",
+  "version": "2.0.0",
+  "description": "Çek/senet, borç, kira ve nakit akışı takip programı",
   "main": "masaustu/main.js",
   "author": "Hasan Ercan Ceran",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
     "start": "electron .",
-    "derle:windows": "electron-builder --win portable zip",
+    "derle:windows": "electron-builder --win zip",
     "derle:mac": "electron-builder --mac zip",
-    "derle:linux": "electron-builder --linux AppImage"
+    "derle:linux": "electron-builder --linux AppImage",
+    "derle:windows-kurulum": "electron-builder --win nsis"
   },
   "build": {
-    "appId": "com.hasanercanceran.finans2027",
-    "productName": "Finans Takip 2027",
+    "appId": "com.hasanercanceran.finanstakip",
+    "productName": "Finans Takip",
     "files": [
-      "index.html",
-      "style.css",
-      "app.js",
-      "masaustu/**"
+      "src/**",
+      "masaustu/main.js",
+      "masaustu/preload.js",
+      "build/icon.png"
     ],
-    "directories": {
-      "output": "dist"
-    },
-    "win": {
-      "signAndEditExecutable": false
-    },
-    "portable": {
-      "artifactName": "Finans-Takip-2027.exe"
-    },
     "extraFiles": [
+      {
+        "from": "masaustu/Kur.bat",
+        "to": "."
+      },
+      {
+        "from": "masaustu/Kaldir.bat",
+        "to": "."
+      },
+      {
+        "from": "masaustu/OKU-BENI.txt",
+        "to": "."
+      },
       {
         "from": "masaustu/Hata-Kaydi-Ile-Baslat.bat",
         "to": "."
       }
-    ]
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "signAndEditExecutable": false,
+      "icon": "build/icon.ico",
+      "target": [
+        "zip"
+      ],
+      "artifactName": "Finans-Takip-${version}-Windows.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Finans Takip",
+      "language": "1055",
+      "artifactName": "Finans-Takip-Kurulum-${version}.exe"
+    },
+    "afterPack": "build/afterPack.js"
   },
   "devDependencies": {
     "electron": "^45.5.0",
-    "electron-builder": "^26.18.0"
+    "electron-builder": "^26.18.0",
+    "resedit": "^3.1.1"
   }
 }
